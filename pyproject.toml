@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "linebot-content-rank"
+version = "0.1.0"
+description = ""
+authors = ["Niwaiwa <po2846@gmail.com>"]
+readme = "README.md"
+packages = [{include = "linebot_content_rank"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+flask = "^2.2.3"
+line-bot-sdk = "^2.4.2"
+lxml = "^4.9.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
