@@ -1,7 +1,6 @@
 import traceback
 from niconico import Niconico
 from pixiv import Pixiv
-from typing import Sized
 from flask import Flask, request, abort
 
 from linebot import (
@@ -16,11 +15,18 @@ from linebot.models import (
     ButtonComponent, CarouselContainer
 )
 
+from dotenv import load_dotenv
+from os import environ
+
+
+load_dotenv('.env')
+ACCESS_TOKEN = environ.get('ACCESS_TOKEN', '')
+CHANNEL_SECRET = environ.get('CHANNEL_SECRET', '')
 
 app = Flask(__name__)
 
-line_bot_api = LineBotApi('OjqwVZvIjTkPksiRkRKccLBD/oAux2ZlnF1UljLrJpEKZ3dULgDHMZJI45W095hc3AnvbWl6tf7QpIIWMYtsho6NM/9bHMIslj1KYhO7pT9X71x0QPgnSipIkSr33UdSolMUrG78NoeC9EZJoeEsTgdB04t89/1O/w1cDnyilFU=')
-handler = WebhookHandler('720c3539c9a78f2e459e02884e579e5f')
+line_bot_api = LineBotApi(ACCESS_TOKEN)
+handler = WebhookHandler(CHANNEL_SECRET)
 
 
 @app.route("/callback", methods=['POST'])
@@ -81,7 +87,6 @@ def handle_message(event):
         messages = []
         chunk_list = get_chunk_list(bubble_item_list)
         for item_list in chunk_list:
-            # print(len(item_list))
             message = FlexSendMessage(
                 alt_text='hello',
                 contents=CarouselContainer(
@@ -90,17 +95,17 @@ def handle_message(event):
             )
             messages.append(message)
 
-        if len(messages) > 5:
-            chunk_list = get_chunk_list(messages, 5)
-            for messages in chunk_list:
-                line_bot_api.reply_message(
-                    event.reply_token,
-                    messages)
-                break
-        else:
-            line_bot_api.reply_message(
-                event.reply_token,
-                messages)
+        # if len(messages) > 5:
+        #     chunk_list = get_chunk_list(messages, 5)
+        #     for messages in chunk_list:
+        #         line_bot_api.reply_message(
+        #             event.reply_token,
+        #             messages)
+        #         break
+        # else:
+        line_bot_api.reply_message(
+            event.reply_token,
+            messages)
     else:
         message = TextSendMessage(text=text)
 
@@ -196,6 +201,14 @@ def get_niconico_bubble_messages(rank_item):
     title = rank_item.get("title")
     thumbnail_url = rank_item.get("thumbnail_url")
     video_url = rank_item.get("video_url")
+    if not thumbnail_url:
+        hero = None
+    else:
+        hero = ImageComponent(
+            url=thumbnail_url,
+            size='full',
+            action=URIAction(uri=video_url, label='source'),
+        )
     # print(rank_item)
     return BubbleContainer(
         direction='ltr',
@@ -206,15 +219,11 @@ def get_niconico_bubble_messages(rank_item):
             # background_color="transparent",
             layout="vertical",
         ),
-        hero=ImageComponent(
-            url=thumbnail_url,
-            size='full',
-            action=URIAction(uri=video_url, label='source'),
-        ),
+        hero=hero,
         body=BoxComponent(
             layout="vertical",
             contents=[
-                TextComponent(text=f"{title}", size="xl", align="center", weight="bold"),
+                TextComponent(text=f"{title}", size="xl", align="center", weight="bold", wrap=True),
                 SeparatorComponent("md"),
                 BoxComponent(
                     layout="vertical",
